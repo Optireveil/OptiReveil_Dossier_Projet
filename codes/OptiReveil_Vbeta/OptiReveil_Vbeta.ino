@@ -34,7 +34,12 @@ int light_blue = 0;
 int light_red = 0;
 int light_green = 0;
 boolean ambiant_light_mode = false;
-
+boolean aube_mode = false;
+unsigned long int chrono_aube = 0;
+int target_red = 0;
+int target_green = 0;
+int target_blue = 0;
+int old_tic = 0;
 //### NIGHT MODE ###
 boolean mode_nuit = false;
 boolean wait_sleep = false;
@@ -44,13 +49,13 @@ boolean first_time_insert_table = true;
 
 unsigned long int chrono_wait_for_sleep = 0;
 unsigned long int chrono_track_start = 0;
-byte check_table_size[] = {1,1,1,1,1,1,1,1,1,1,1,0};
-int time_code_night[] = {20,25,30,35,40,45,50,55,100,105,110};
-int night[] = {13,5,0,3,0,7,42,1,23,0,72};
+byte check_table_size[144]; //(max_night_hours*60/time_record_moves)
+int time_code_night[144];
+int night[144];
 int count_night = 0;
 int count_five_min = 0;
-int etalonnage_capt = 36;
-int seuil_detect_mouv = 5;
+int etalonnage_capt = captor_calibration;
+int seuil_detect_mouv = ceil_detection;
 
 
 
@@ -58,6 +63,7 @@ int seuil_detect_mouv = 5;
 
 
 void setup(){
+  Serial.begin(9600);
   strip.begin();
   strip.show();
   setupSpecialChar();
@@ -140,7 +146,7 @@ void loop(){
         actualiserHeure();
         afficherHeure(heure,minute);
         afficherAlarmMode();
-        ambiance_light();
+        //ambiance_light();
         if(mode_nuit == true){
           ambiant_light_mode = false;
           com.setCursor(1,16);
@@ -517,9 +523,7 @@ void waitForSleep(){
 // MARK: moniteur de la nuit
 void monitoringNight(){
   if(track_start == true){
-    Serial.println("track start : TRUE");
     if(first_time_track == true){
-      Serial.println("... premiere fois");
       first_time_track = false;
       chrono_track_start = millis();
       count_night = 0;
@@ -530,7 +534,7 @@ void monitoringNight(){
     if(readBut() == 8){
       com.setCursor(2,8);
       com.printCustomChar(6);
-      if((millis() - chrono_track_start)%300000 < 5000){
+      if((millis() - chrono_track_start)%300000 < 3000){
         com.setCursor(2,10);
         com.print("R");
         //Serial.println("Fourchette");
@@ -787,6 +791,61 @@ void ambiance_light(){
     strip.setPixelColor(0,strip.Color(light_red, light_green, light_blue));
     strip.show();
   }else{
+    strip.setPixelColor(0,strip.Color(0,0,0));
+    strip.show();
+  }
+}
+
+void aube(int total_time){
+ if (aube_mode == true){
+    Serial.print("aube");
+    int tic_unit = total_time*60000/573;
+    int tic = ((millis()-chrono_aube)/tic_unit);
+    if (tic <= 26){
+      target_blue = 26;
+    } else if (tic <= 64){
+      target_blue = 15;
+      target_green = 38;
+    } else if (tic <= 153){
+      target_blue = 63;
+      target_green = 63;
+      target_red = 89;
+    } else if (tic <= 318){
+      target_blue = 102;
+      target_green = 153;
+      target_red = 165;
+    } else {
+      target_blue = 255;
+      target_green = 255;
+      target_red = 255;
+    }
+    if (old_tic != tic){
+      old_tic = tic;
+      if(light_red < target_red){
+        light_red ++;
+      }
+      if(light_green < target_green){
+        light_green ++;
+      }
+      if(light_blue < target_blue){
+        light_blue ++;
+      }
+      Serial.print(" ");
+      Serial.print(tic);
+      Serial.print(" : ");
+      Serial.print(light_red);
+      Serial.print(" ");
+      Serial.print(light_green);
+      Serial.print(" ");
+      Serial.println(light_blue);
+      strip.setPixelColor(0,strip.Color(light_red, light_green, light_blue));
+      strip.show();
+    }
+
+
+
+  }else{
+    chrono_aube = millis();
     strip.setPixelColor(0,strip.Color(0,0,0));
     strip.show();
   }

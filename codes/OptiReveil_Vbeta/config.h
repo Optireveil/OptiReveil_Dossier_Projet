@@ -28,3 +28,4 @@
 #define ceil_detection 1 //%
 
 #define captor_calibration 36 //tims in ms.
+#define aube_time 15
