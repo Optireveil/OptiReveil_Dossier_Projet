@@ -1,9 +1,9 @@
-#include <SoftwareSerial.h>
-#include <serLCD.h>
+#include <SoftwareSerial.h>  // a native library that allow to use other pin than D0 and D1 to communicate in serial
+#include <serLCD.h> // a SparkFun library which allow to use in an easiest way the SparkFun SerLCD module (you can download it there : https://github.com/yazug/serLCD )
 
 #include "config.h"
 
-#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h> // an adafruit library that allow to control 3 colors led modules "NeoPixel" (lib can be downloaded here : https://github.com/adafruit/Adafruit_NeoPixel )
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
